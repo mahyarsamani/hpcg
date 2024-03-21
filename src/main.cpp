@@ -61,6 +61,11 @@ using std::endl;
 #include "TestSymmetry.hpp"
 #include "TestNorms.hpp"
 
+#ifdef ANNOTATE
+extern "C" {
+#include "roi.h"
+}
+#endif // ANNOTATE
 /*!
   Main driver program: Construct synthetic problem, run V&V tests, compute benchmark parameters, run benchmark, report results.
 
@@ -71,6 +76,10 @@ using std::endl;
 
 */
 int main(int argc, char * argv[]) {
+
+#ifdef ANNOTATE
+  annotate_init_();
+#endif // ANNOTATE
 
 #ifndef HPCG_NO_MPI
   MPI_Init(&argc, &argv);
@@ -332,6 +341,10 @@ int main(int argc, char * argv[]) {
   testnorms_data.samples = numberOfCgSets;
   testnorms_data.values = new double[numberOfCgSets];
 
+#ifdef ANNOTATE
+  roi_begin_();
+#endif // ANNOTATE
+
   for (int i=0; i< numberOfCgSets; ++i) {
     ZeroVector(x); // Zero out x
     ierr = CG( A, data, b, x, optMaxIters, optTolerance, niters, normr, normr0, &times[0], true);
@@ -339,6 +352,10 @@ int main(int argc, char * argv[]) {
     if (rank==0) HPCG_fout << "Call [" << i << "] Scaled Residual [" << normr/normr0 << "]" << endl;
     testnorms_data.values[i] = normr/normr0; // Record scaled residual from this run
   }
+
+#ifdef ANNOTATE
+  roi_end_();
+#endif // ANNOTATE
 
   // Compute difference between known exact solution and computed solution
   // All processors are needed here.
