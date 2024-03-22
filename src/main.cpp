@@ -341,21 +341,25 @@ int main(int argc, char * argv[]) {
   testnorms_data.samples = numberOfCgSets;
   testnorms_data.values = new double[numberOfCgSets];
 
+
 #ifdef ANNOTATE
-  roi_begin_();
+    thread_init_();
 #endif // ANNOTATE
 
   for (int i=0; i< numberOfCgSets; ++i) {
     ZeroVector(x); // Zero out x
+#ifdef ANNOTATE
+    roi_begin_();
+#endif // ANNOTATE
     ierr = CG( A, data, b, x, optMaxIters, optTolerance, niters, normr, normr0, &times[0], true);
+#ifdef ANNOTATE
+    roi_end_();
+#endif // ANNOTATE
     if (ierr) HPCG_fout << "Error in call to CG: " << ierr << ".\n" << endl;
     if (rank==0) HPCG_fout << "Call [" << i << "] Scaled Residual [" << normr/normr0 << "]" << endl;
     testnorms_data.values[i] = normr/normr0; // Record scaled residual from this run
   }
 
-#ifdef ANNOTATE
-  roi_end_();
-#endif // ANNOTATE
 
   // Compute difference between known exact solution and computed solution
   // All processors are needed here.
