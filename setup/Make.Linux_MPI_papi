@@ -88,12 +88,12 @@ MPlib        =
 #
 #
 # ----------------------------------------------------------------------
-# - gem5 ROI Annotation ------------------------------------------------
+# - papi Annotation ------------------------------------------------
 # ----------------------------------------------------------------------
-ROIdir       = $(TOPdir)/../roi
-ROIdef       = -DANNOTATE
-ROIinc       = -I$(ROIdir)/include -I$(ROIdir)/papi/install/include
-ROIlib       = -L$(ROIdir)/lib -L$(ROIdir)/papi/install/lib -lroi.papi -lpapi -lpapi
+ANNOTATEdir       = $(TOPdir)/../annotate
+ANNOTATEdef       = -DANNOTATE
+ANNOTATEinc       = -I$(ANNOTATEdir)/include -I$(ANNOTATEdir)/papi/install/include
+ANNOTATElib       = -L$(ANNOTATEdir)/lib -L$(ANNOTATEdir)/papi/install/lib -lannotate.papi -lpapi -lpapi
 #
 # ----------------------------------------------------------------------
 # - HPCG includes / libraries / specifics ------------------------------
@@ -127,7 +127,7 @@ HPCG_DEFS     = $(HPCG_OPTS) $(HPCG_INCLUDES)
 #
 CXX          = mpicxx
 #CXXFLAGS     = $(HPCG_DEFS) -fomit-frame-pointer -O3 -funroll-loops -W -Wall
-CXXFLAGS     = $(HPCG_DEFS) $(ROIdef) $(ROIinc) $(ROIlib) -O3 -ffast-math -ftree-vectorize -ftree-vectorizer-verbose=0
+CXXFLAGS     = $(HPCG_DEFS) $(ANNOTATEdef) $(ANNOTATEinc) $(ANNOTATElib) -O3 -ffast-math -ftree-vectorize -ftree-vectorizer-verbose=0
 #
 LINKER       = $(CXX)
 LINKFLAGS    = $(CXXFLAGS)
