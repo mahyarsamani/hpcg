@@ -77,10 +77,6 @@ extern "C" {
 */
 int main(int argc, char * argv[]) {
 
-#ifdef ANNOTATE
-  annotate_init_();
-#endif // ANNOTATE
-
 #ifndef HPCG_NO_MPI
   MPI_Init(&argc, &argv);
 #endif
@@ -88,6 +84,10 @@ int main(int argc, char * argv[]) {
   HPCG_Params params;
 
   HPCG_Init(&argc, &argv, params);
+
+#ifdef ANNOTATE
+  annotate_init_();
+#endif // ANNOTATE
 
   // Check if QuickPath option is enabled.
   // If the running time is set to zero, we minimize all paths through the program
@@ -342,10 +342,6 @@ int main(int argc, char * argv[]) {
   testnorms_data.values = new double[numberOfCgSets];
 
 
-#ifdef ANNOTATE
-    thread_init_();
-#endif // ANNOTATE
-
   for (int i=0; i< numberOfCgSets; ++i) {
     ZeroVector(x); // Zero out x
 #ifdef ANNOTATE
@@ -398,5 +394,9 @@ int main(int argc, char * argv[]) {
 #ifndef HPCG_NO_MPI
   MPI_Finalize();
 #endif
+
+#ifdef ANNOTATE
+  annotate_term_();
+#endif // ANNOTATE
   return 0;
 }
