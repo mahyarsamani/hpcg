@@ -346,10 +346,16 @@ int main(int argc, char * argv[]) {
     ZeroVector(x); // Zero out x
 #ifdef ANNOTATE
     roi_begin_();
+#ifdef SYNC_ON_ROI
+    annotate_synchronize_(1);
+#endif // SYNC_ON_ROI
 #endif // ANNOTATE
     ierr = CG( A, data, b, x, optMaxIters, optTolerance, niters, normr, normr0, &times[0], true);
 #ifdef ANNOTATE
     roi_end_();
+#ifdef SYNC_ON_ROI
+    annotate_synchronize_(2);
+#endif // SYNC_ON_ROI
 #endif // ANNOTATE
     if (ierr) HPCG_fout << "Error in call to CG: " << ierr << ".\n" << endl;
     if (rank==0) HPCG_fout << "Call [" << i << "] Scaled Residual [" << normr/normr0 << "]" << endl;
