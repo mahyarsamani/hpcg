@@ -36,6 +36,14 @@ typedef std::map< global_int_t, local_int_t > GlobalToLocalMap;
 using GlobalToLocalMap = std::unordered_map< global_int_t, local_int_t >;
 #endif
 
+#ifdef HOV
+#include "hov.h"
+
+struct HovData {
+    hov_pair_t* spmv_pairs;
+};
+#endif
+
 struct SparseMatrix_STRUCT {
   char  * title; //!< name of the sparse matrix
   Geometry * geom; //!< geometry associated with this matrix
@@ -179,6 +187,21 @@ inline void DeleteMatrix(SparseMatrix & A) {
   if (A.geom!=0) { DeleteGeometry(*A.geom); delete A.geom; A.geom = 0;}
   if (A.Ac!=0) { DeleteMatrix(*A.Ac); delete A.Ac; A.Ac = 0;} // Delete coarse matrix
   if (A.mgData!=0) { DeleteMGData(*A.mgData); delete A.mgData; A.mgData = 0;} // Delete MG data
+
+#ifdef HOV
+  if (A.optimizationData) {
+    HovData * hov_data = (HovData *)A.optimizationData;
+    if (hov_data->spmv_pairs) {
+      for (local_int_t i = 0; i < A.localNumberOfRows; ++i) {
+        hov_destroy_pair(&hov_data->spmv_pairs[i]);
+      }
+      delete [] hov_data->spmv_pairs;
+    }
+    delete hov_data;
+    A.optimizationData = 0;
+  }
+#endif
+
   return;
 }
 

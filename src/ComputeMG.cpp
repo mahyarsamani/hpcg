@@ -21,6 +21,10 @@
 #include "ComputeMG.hpp"
 #include "ComputeMG_ref.hpp"
 
+#ifdef ANNOTATE
+#include <annotate.h>
+#endif
+
 /*!
   @param[in] A the known system matrix
   @param[in] r the input vector
@@ -32,7 +36,22 @@
 */
 int ComputeMG(const SparseMatrix  & A, const Vector & r, Vector & x) {
 
-  // This line and the next two lines should be removed and your version of ComputeSYMGS should be used.
+#if defined(ANNOTATE) && defined(ROI_MG)
+    roi_begin_();
+#ifdef SYNC_ON_ROI
+    annotate_synchronize_(1);
+#endif
+#endif
+
   A.isMgOptimized = false;
-  return ComputeMG_ref(A, r, x);
+  int ret = ComputeMG_ref(A, r, x);
+
+#if defined(ANNOTATE) && defined(ROI_MG)
+    roi_end_();
+#ifdef SYNC_ON_ROI
+    annotate_synchronize_(2);
+#endif
+#endif
+
+  return ret;
 }

@@ -22,6 +22,10 @@
 
 #include <cmath>
 
+#ifdef ANNOTATE
+#include <annotate.h>
+#endif
+
 #include "hpcg.hpp"
 
 #include "CG.hpp"
@@ -97,6 +101,13 @@ int CG(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
 
   // Start iterations
   // Convergence check accepts an error of no more than 6 significant digits of tolerance
+#if defined(ANNOTATE) && defined(ROI_CG)
+    roi_begin_();
+#ifdef SYNC_ON_ROI
+    annotate_synchronize_(1);
+#endif
+#endif
+
   for (int k=1; k<=max_iter && normr/normr0 > tolerance * (1.0 + 1.0e-6); k++ ) {
     TICK();
     if (doPreconditioning)
@@ -128,6 +139,13 @@ int CG(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
 #endif
     niters = k;
   }
+
+#if defined(ANNOTATE) && defined(ROI_CG)
+    roi_end_();
+#ifdef SYNC_ON_ROI
+    annotate_synchronize_(2);
+#endif
+#endif
 
   // Store times
   times[1] += t1; // dot-product time

@@ -21,6 +21,10 @@
 #include "ComputeWAXPBY.hpp"
 #include "ComputeWAXPBY_ref.hpp"
 
+#ifdef ANNOTATE
+#include <annotate.h>
+#endif
+
 /*!
   Routine to compute the update of a vector with the sum of two
   scaled vectors where: w = alpha*x + beta*y
@@ -42,7 +46,22 @@
 int ComputeWAXPBY(const local_int_t n, const double alpha, const Vector & x,
     const double beta, const Vector & y, Vector & w, bool & isOptimized) {
 
-  // This line and the next two lines should be removed and your version of ComputeWAXPBY should be used.
+#if defined(ANNOTATE) && defined(ROI_WAXPBY)
+    roi_begin_();
+#ifdef SYNC_ON_ROI
+    annotate_synchronize_(1);
+#endif
+#endif
+
   isOptimized = false;
-  return ComputeWAXPBY_ref(n, alpha, x, beta, y, w);
+  int ret = ComputeWAXPBY_ref(n, alpha, x, beta, y, w);
+
+#if defined(ANNOTATE) && defined(ROI_WAXPBY)
+    roi_end_();
+#ifdef SYNC_ON_ROI
+    annotate_synchronize_(2);
+#endif
+#endif
+
+  return ret;
 }

@@ -21,6 +21,18 @@
 #include "ComputeSYMGS.hpp"
 #include "ComputeSYMGS_ref.hpp"
 
+#ifdef ANNOTATE
+#include <annotate.h>
+#endif
+
+#ifdef HOV
+#include "hov.h"
+#ifndef HPCG_NO_MPI
+#include "ExchangeHalo.hpp"
+#endif
+#include <cassert>
+#endif
+
 /*!
   Routine to compute one step of symmetric Gauss-Seidel:
 
@@ -49,7 +61,70 @@
 */
 int ComputeSYMGS( const SparseMatrix & A, const Vector & r, Vector & x) {
 
-  // This line and the next two lines should be removed and your version of ComputeSYMGS should be used.
-  return ComputeSYMGS_ref(A, r, x);
+#if defined(ANNOTATE) && defined(ROI_SYMGS)
+    roi_begin_();
+#ifdef SYNC_ON_ROI
+    annotate_synchronize_(1);
+#endif
+#endif
 
+#ifdef HOV
+  assert(x.localLength==A.localNumberOfColumns);
+
+#ifndef HPCG_NO_MPI
+  ExchangeHalo(A,x);
+#endif
+
+  assert(A.optimizationData != 0);
+  HovData * hov_data = (HovData*)A.optimizationData;
+  const local_int_t nrow = A.localNumberOfRows;
+  double ** matrixDiagonal = A.matrixDiagonal;
+  const double * const rv = r.values;
+  double * const xv = x.values;
+
+  for (local_int_t i=0; i< nrow; i++) {
+    const double * const currentValues = A.matrixValues[i];
+    const int currentNumberOfNonzeros = A.nonzerosInRow[i];
+    const double currentDiagonal = matrixDiagonal[i][0];
+    double sum = rv[i];
+    hov_pair_t * pair = &hov_data->spmv_pairs[i]; // Reuse SpMV pairs
+
+    for (int j=0; j< currentNumberOfNonzeros; j++) {
+      hov_result_f64_u32_t res;
+      hov_gather_f64_u32(&res, pair, j);
+      sum -= currentValues[j] * res.data_val;
+    }
+    sum += xv[i]*currentDiagonal;
+    xv[i] = sum/currentDiagonal;
+  }
+
+  for (local_int_t i=nrow-1; i>=0; i--) {
+    const double * const currentValues = A.matrixValues[i];
+    const int currentNumberOfNonzeros = A.nonzerosInRow[i];
+    const double currentDiagonal = matrixDiagonal[i][0];
+    double sum = rv[i];
+    hov_pair_t * pair = &hov_data->spmv_pairs[i];
+
+    for (int j = 0; j< currentNumberOfNonzeros; j++) {
+      hov_result_f64_u32_t res;
+      hov_gather_f64_u32(&res, pair, j);
+      sum -= currentValues[j]*res.data_val;
+    }
+    sum += xv[i]*currentDiagonal;
+    xv[i] = sum/currentDiagonal;
+  }
+
+  int ret = 0;
+#else
+  int ret = ComputeSYMGS_ref(A, r, x);
+#endif
+
+#if defined(ANNOTATE) && defined(ROI_SYMGS)
+    roi_end_();
+#ifdef SYNC_ON_ROI
+    annotate_synchronize_(2);
+#endif
+#endif
+
+  return ret;
 }

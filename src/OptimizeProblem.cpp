@@ -39,6 +39,21 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
   // This function can be used to completely transform any part of the data structures.
   // Right now it does nothing, so compiling with a check for unused variables results in complaints
 
+#ifdef HOV
+  HovData * hov_data = new HovData;
+  hov_data->spmv_pairs = new hov_pair_t[A.localNumberOfRows];
+  for (local_int_t i = 0; i < A.localNumberOfRows; ++i) {
+      hov_data->spmv_pairs[i] = hov_create_pair(
+          (void*)x.values,
+          (void*)A.mtxIndL[i],
+          sizeof(double),
+          sizeof(local_int_t),
+          A.nonzerosInRow[i]
+      );
+  }
+  A.optimizationData = hov_data;
+#endif
+
 #if defined(HPCG_USE_MULTICOLORING)
   const local_int_t nrow = A.localNumberOfRows;
   std::vector<local_int_t> colors(nrow, nrow); // value `nrow' means `uninitialized'; initialized colors go from 0 to nrow-1
