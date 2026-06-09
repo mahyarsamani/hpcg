@@ -22,7 +22,9 @@
 #include "ComputeWAXPBY_ref.hpp"
 
 #ifdef ANNOTATE
+extern "C" {
 #include <annotate.h>
+}
 #endif
 
 /*!
@@ -46,7 +48,7 @@
 int ComputeWAXPBY(const local_int_t n, const double alpha, const Vector & x,
     const double beta, const Vector & y, Vector & w, bool & isOptimized) {
 
-#if defined(ANNOTATE) && defined(ROI_WAXPBY)
+#if defined(ANNOTATE) && defined(KERNEL_WAXPBY)
     roi_begin_();
 #ifdef SYNC_ON_ROI
     annotate_synchronize_(1);
@@ -56,7 +58,7 @@ int ComputeWAXPBY(const local_int_t n, const double alpha, const Vector & x,
   isOptimized = false;
   int ret = ComputeWAXPBY_ref(n, alpha, x, beta, y, w);
 
-#if defined(ANNOTATE) && defined(ROI_WAXPBY)
+#if defined(ANNOTATE) && defined(KERNEL_WAXPBY)
     roi_end_();
 #ifdef SYNC_ON_ROI
     annotate_synchronize_(2);

@@ -22,7 +22,9 @@
 #include "ComputeMG_ref.hpp"
 
 #ifdef ANNOTATE
+extern "C" {
 #include <annotate.h>
+}
 #endif
 
 /*!
@@ -36,7 +38,7 @@
 */
 int ComputeMG(const SparseMatrix  & A, const Vector & r, Vector & x) {
 
-#if defined(ANNOTATE) && defined(ROI_MG)
+#if defined(ANNOTATE) && defined(KERNEL_MG)
     roi_begin_();
 #ifdef SYNC_ON_ROI
     annotate_synchronize_(1);
@@ -46,7 +48,7 @@ int ComputeMG(const SparseMatrix  & A, const Vector & r, Vector & x) {
   A.isMgOptimized = false;
   int ret = ComputeMG_ref(A, r, x);
 
-#if defined(ANNOTATE) && defined(ROI_MG)
+#if defined(ANNOTATE) && defined(KERNEL_MG)
     roi_end_();
 #ifdef SYNC_ON_ROI
     annotate_synchronize_(2);

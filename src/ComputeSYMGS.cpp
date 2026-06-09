@@ -22,7 +22,9 @@
 #include "ComputeSYMGS_ref.hpp"
 
 #ifdef ANNOTATE
+extern "C" {
 #include <annotate.h>
+}
 #endif
 
 #ifdef HOV
@@ -61,7 +63,7 @@
 */
 int ComputeSYMGS( const SparseMatrix & A, const Vector & r, Vector & x) {
 
-#if defined(ANNOTATE) && defined(ROI_SYMGS)
+#if defined(ANNOTATE) && defined(KERNEL_SYMGS)
     roi_begin_();
 #ifdef SYNC_ON_ROI
     annotate_synchronize_(1);
@@ -119,7 +121,7 @@ int ComputeSYMGS( const SparseMatrix & A, const Vector & r, Vector & x) {
   int ret = ComputeSYMGS_ref(A, r, x);
 #endif
 
-#if defined(ANNOTATE) && defined(ROI_SYMGS)
+#if defined(ANNOTATE) && defined(KERNEL_SYMGS)
     roi_end_();
 #ifdef SYNC_ON_ROI
     annotate_synchronize_(2);

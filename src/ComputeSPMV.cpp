@@ -22,7 +22,9 @@
 #include "ComputeSPMV_ref.hpp"
 
 #ifdef ANNOTATE
+extern "C" {
 #include <annotate.h>
+}
 #endif
 
 #ifdef HOV
@@ -47,7 +49,7 @@
 */
 int ComputeSPMV( const SparseMatrix & A, Vector & x, Vector & y) {
 
-#if defined(ANNOTATE) && defined(ROI_SPMVM)
+#if defined(ANNOTATE) && defined(KERNEL_SPMVM)
     roi_begin_();
 #ifdef SYNC_ON_ROI
     annotate_synchronize_(1);
@@ -83,7 +85,7 @@ int ComputeSPMV( const SparseMatrix & A, Vector & x, Vector & y) {
   int ret = ComputeSPMV_ref(A, x, y);
 #endif
 
-#if defined(ANNOTATE) && defined(ROI_SPMVM)
+#if defined(ANNOTATE) && defined(KERNEL_SPMVM)
     roi_end_();
 #ifdef SYNC_ON_ROI
     annotate_synchronize_(2);

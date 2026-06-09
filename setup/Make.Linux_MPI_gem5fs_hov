@@ -90,17 +90,17 @@ MPlib        =
 # ----------------------------------------------------------------------
 # - gem5 Annotation ------------------------------------------------
 # ----------------------------------------------------------------------
-ANNOTATEdir       = $(TOPdir)/../annotate
+ANNOTATEdir       = $(abspath $(TOPdir)/../annotate)
 ANNOTATEdef       = -DANNOTATE -DSYNC_ON_ROI
-ANNOTATEinc       = -I$(ANNOTATEdir)/include -I$(ANNOTATEdir)/gem5/include
-ANNOTATElib       = -L$(ANNOTATEdir)/lib -L$(ANNOTATEdir)/gem5/lib -lannotate.gem5fs -lm5
+ANNOTATEinc       = -I$(ANNOTATEdir)/include
+ANNOTATElib       = -L$(ANNOTATEdir)/lib -lannotate.gem5fs -lm5
 #
 # ----------------------------------------------------------------------
 # - HPCG includes / libraries / specifics ------------------------------
 # ----------------------------------------------------------------------
 #
-HPCG_INCLUDES = -I$(INCdir) -I$(INCdir)/$(arch) $(MPinc) -I$(TOPdir)/../hov/include
-HPCG_LIBS     = $(EXTRA_LINKFLAGS)
+HPCG_INCLUDES = -I$(INCdir) -I$(INCdir)/$(arch) $(MPinc) -I$(abspath $(TOPdir)/../hov/include)
+HPCG_LIBS     = $(ANNOTATElib) -L$(abspath $(TOPdir)/../hov/lib) -lhov
 #
 # - Compile time options -----------------------------------------------
 #
@@ -127,7 +127,7 @@ HPCG_DEFS     = $(HPCG_OPTS) $(HPCG_INCLUDES)
 #
 CXX          = mpicxx
 #CXXFLAGS     = $(HPCG_DEFS) -fomit-frame-pointer -O3 -funroll-loops -W -Wall
-CXXFLAGS     = $(HPCG_DEFS) $(ANNOTATEdef) $(ANNOTATEinc) $(ANNOTATElib) -O3 -ffast-math -ftree-vectorize -ftree-vectorizer-verbose=0 $(EXTRA_CXXFLAGS)
+CXXFLAGS     = $(HPCG_DEFS) $(ANNOTATEdef) $(ANNOTATEinc) -O3 -ffast-math -ftree-vectorize -ftree-vectorizer-verbose=0 -DKERNEL_$(HPCG_KERNEL) -DHOV
 #
 LINKER       = $(CXX)
 LINKFLAGS    = $(CXXFLAGS)

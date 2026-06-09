@@ -23,7 +23,9 @@
 #include <cmath>
 
 #ifdef ANNOTATE
+extern "C" {
 #include <annotate.h>
+}
 #endif
 
 #include "hpcg.hpp"
@@ -101,7 +103,7 @@ int CG(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
 
   // Start iterations
   // Convergence check accepts an error of no more than 6 significant digits of tolerance
-#if defined(ANNOTATE) && defined(ROI_CG)
+#if defined(ANNOTATE) && defined(KERNEL_CG)
     roi_begin_();
 #ifdef SYNC_ON_ROI
     annotate_synchronize_(1);
@@ -140,7 +142,7 @@ int CG(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
     niters = k;
   }
 
-#if defined(ANNOTATE) && defined(ROI_CG)
+#if defined(ANNOTATE) && defined(KERNEL_CG)
     roi_end_();
 #ifdef SYNC_ON_ROI
     annotate_synchronize_(2);
