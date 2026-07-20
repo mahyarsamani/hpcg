@@ -24,6 +24,13 @@
 #include <cstdlib>
 #include "Geometry.hpp"
 
+#ifdef HOV
+extern "C" {
+#include "hov.h"
+#include "hov_alloc.h"
+}
+#endif
+
 struct Vector_STRUCT {
   local_int_t localLength;  //!< length of local portion of the vector
   double * values;          //!< array of values
@@ -44,7 +51,11 @@ typedef struct Vector_STRUCT Vector;
  */
 inline void InitializeVector(Vector & v, local_int_t localLength) {
   v.localLength = localLength;
+#ifdef HOV
+  v.values = (double*)hov_alloc_data(localLength * sizeof(double));
+#else
   v.values = new double[localLength];
+#endif
   v.optimizationData = 0;
   return;
 }
@@ -107,7 +118,11 @@ inline void CopyVector(const Vector & v, Vector & w) {
  */
 inline void DeleteVector(Vector & v) {
 
+#ifdef HOV
+  hov_free_data(v.values);
+#else
   delete [] v.values;
+#endif
   v.localLength = 0;
   return;
 }

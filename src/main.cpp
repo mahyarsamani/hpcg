@@ -186,6 +186,15 @@ int main(int argc, char * argv[]) {
   InitializeVector(x_overlap, ncol); // Overlapped copy of x vector
   InitializeVector(b_computed, nrow); // Computed RHS vector
 
+#ifdef HOV
+  /* Synchronize all ranks, then have rank 0 freeze the shared region.
+   * Other ranks' arenas are initialized lazily on first allocation. */
+  MPI_Barrier(MPI_COMM_WORLD);
+  if (rank == 0)
+    hov_init_arenas(0);
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+
 
   // Record execution time of reference SpMV and MG kernels for reporting times
   // First load vector with random values

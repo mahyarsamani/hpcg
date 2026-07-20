@@ -90,10 +90,10 @@ MPlib        =
 # ----------------------------------------------------------------------
 # - papi Annotation ------------------------------------------------
 # ----------------------------------------------------------------------
-ANNOTATEdir       = $(TOPdir)/../annotate
+ANNOTATEdir       = $(abspath $(TOPdir)/../annotate)
 ANNOTATEdef       = -DANNOTATE
 ANNOTATEinc       = -I$(ANNOTATEdir)/include -I$(ANNOTATEdir)/papi/install/include
-ANNOTATElib       = -L$(ANNOTATEdir)/lib -L$(ANNOTATEdir)/papi/install/lib -lannotate.papi -lpapi -lpapi
+ANNOTATElib       = -L$(ANNOTATEdir)/lib -L$(ANNOTATEdir)/papi/install/lib -Wl,-Bstatic -lannotate.papi -Wl,-Bdynamic -lpapi -lpthread
 #
 # ----------------------------------------------------------------------
 # - HPCG includes / libraries / specifics ------------------------------

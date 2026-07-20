@@ -93,7 +93,7 @@ MPlib        =
 ANNOTATEdir       = $(abspath $(TOPdir)/../annotate)
 ANNOTATEdef       = -DANNOTATE -DSYNC_ON_ROI
 ANNOTATEinc       = -I$(ANNOTATEdir)/include
-ANNOTATElib       = -L$(ANNOTATEdir)/lib -lannotate.gem5fs -lm5
+ANNOTATElib       = -L$(ANNOTATEdir)/lib -Wl,-Bstatic -lannotate.gem5fs -lm5 -Wl,-Bdynamic
 #
 # ----------------------------------------------------------------------
 # - HPCG includes / libraries / specifics ------------------------------
