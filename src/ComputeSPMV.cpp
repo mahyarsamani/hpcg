@@ -29,6 +29,9 @@ extern "C" {
 
 #ifdef HOV
 #include "hov.h"
+#ifndef HPCG_NO_MPI
+#include "ExchangeHalo.hpp"
+#endif
 #endif
 
 /*!
@@ -49,6 +52,11 @@ extern "C" {
 */
 int ComputeSPMV( const SparseMatrix & A, Vector & x, Vector & y) {
 
+#ifdef HOV
+  // Point the pairs at x (outside the ROI): CG calls this with p, MG with x/xc.
+  HovBindVector(A, x);
+#endif
+
 #if defined(ANNOTATE) && defined(KERNEL_SPMVM)
     roi_begin_();
 #ifdef SYNC_ON_ROI
@@ -57,6 +65,10 @@ int ComputeSPMV( const SparseMatrix & A, Vector & x, Vector & y) {
 #endif
 
 #ifdef HOV
+#ifndef HPCG_NO_MPI
+  // Same as ComputeSPMV_ref: fill x's ghost entries from neighbouring ranks.
+  ExchangeHalo(A,x);
+#endif
   assert(A.optimizationData != 0);
   HovData * hov_data = (HovData*)A.optimizationData;
   double * const yv = y.values;

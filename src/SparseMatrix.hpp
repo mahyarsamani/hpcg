@@ -41,6 +41,10 @@ using GlobalToLocalMap = std::unordered_map< global_int_t, local_int_t >;
 
 struct HovData {
     hov_pair_t* spmv_pairs;
+    // Data array the pairs currently point at. A pair is tied to one data
+    // vector, but SpMV/SYMGS run on different vectors (p, z, xc, ...), so the
+    // pairs are rebound before each call (see HovBindVector).
+    const double* bound_data;
 };
 #endif
 
@@ -83,6 +87,23 @@ struct SparseMatrix_STRUCT {
 #endif
 };
 typedef struct SparseMatrix_STRUCT SparseMatrix;
+
+#ifdef HOV
+/*!
+  Point every row's HOV pair of A at x's data array, if it is not already.
+  Called by the HOV SpMV/SYMGS kernels before their ROI, so the gathers read
+  the vector passed to the kernel rather than the one bound at setup.
+*/
+inline void HovBindVector(const SparseMatrix & A, const Vector & x) {
+  assert(A.optimizationData != 0);
+  HovData * hov_data = (HovData *)A.optimizationData;
+  if (hov_data->bound_data == x.values) return;
+  for (local_int_t i = 0; i < A.localNumberOfRows; ++i) {
+    hov_data->spmv_pairs[i].data_base = (void *)x.values;
+  }
+  hov_data->bound_data = x.values;
+}
+#endif
 
 /*!
   Initializes the known system matrix data structure members to 0.

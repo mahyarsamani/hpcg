@@ -40,18 +40,25 @@ int OptimizeProblem(SparseMatrix & A, CGData & data, Vector & b, Vector & x, Vec
   // Right now it does nothing, so compiling with a check for unused variables results in complaints
 
 #ifdef HOV
-  HovData * hov_data = new HovData;
-  hov_data->spmv_pairs = new hov_pair_t[A.localNumberOfRows];
-  for (local_int_t i = 0; i < A.localNumberOfRows; ++i) {
-      hov_data->spmv_pairs[i] = hov_create_pair(
-          (void*)x.values,
-          (void*)A.mtxIndL[i],
-          sizeof(double),
-          sizeof(local_int_t),
-          A.nonzerosInRow[i]
-      );
+  // Pairs for every MG level, since ComputeMG recurses into the coarse grids
+  // with the HOV kernels. The data vector is bound per call (HovBindVector);
+  // the fine level starts bound to x, the coarse levels unbound.
+  for (SparseMatrix * level = &A; level != 0; level = level->Ac) {
+    const double * initial_data = (level == &A) ? x.values : 0;
+    HovData * hov_data = new HovData;
+    hov_data->spmv_pairs = new hov_pair_t[level->localNumberOfRows];
+    for (local_int_t i = 0; i < level->localNumberOfRows; ++i) {
+        hov_data->spmv_pairs[i] = hov_create_pair(
+            (void*)initial_data,
+            (void*)level->mtxIndL[i],
+            sizeof(double),
+            sizeof(local_int_t),
+            level->nonzerosInRow[i]
+        );
+    }
+    hov_data->bound_data = initial_data;
+    level->optimizationData = hov_data;
   }
-  A.optimizationData = hov_data;
 #endif
 
 #if defined(HPCG_USE_MULTICOLORING)

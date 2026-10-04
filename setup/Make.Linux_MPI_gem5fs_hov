@@ -100,7 +100,9 @@ ANNOTATElib       = -L$(ANNOTATEdir)/lib -Wl,-Bstatic -lannotate.gem5fs -lm5 -Wl
 # ----------------------------------------------------------------------
 #
 HPCG_INCLUDES = -I$(INCdir) -I$(INCdir)/$(arch) $(MPinc) -I$(abspath $(TOPdir)/../hov/include)
-HPCG_LIBS     = $(ANNOTATElib) -L$(abspath $(TOPdir)/../hov/lib) -lhov
+# Static archive, not -lhov: -lhov picks libhov.so, which is not on the
+# guest's library path at run time.
+HPCG_LIBS     = $(ANNOTATElib) $(abspath $(TOPdir)/../hov/lib/libhov.a)
 #
 # - Compile time options -----------------------------------------------
 #

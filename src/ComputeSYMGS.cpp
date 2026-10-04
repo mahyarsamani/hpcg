@@ -63,6 +63,11 @@ extern "C" {
 */
 int ComputeSYMGS( const SparseMatrix & A, const Vector & r, Vector & x) {
 
+#ifdef HOV
+  // Point the pairs at x (outside the ROI): MG calls this with z and xc.
+  HovBindVector(A, x);
+#endif
+
 #if defined(ANNOTATE) && defined(KERNEL_SYMGS)
     roi_begin_();
 #ifdef SYNC_ON_ROI

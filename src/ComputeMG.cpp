@@ -19,13 +19,50 @@
  */
 
 #include "ComputeMG.hpp"
-#include "ComputeMG_ref.hpp"
+#include "ComputeSYMGS.hpp"
+#include "ComputeSPMV.hpp"
+#include "ComputeRestriction_ref.hpp"
+#include "ComputeProlongation_ref.hpp"
+#include <cassert>
 
 #ifdef ANNOTATE
 extern "C" {
 #include <annotate.h>
 }
 #endif
+
+/*!
+  The V-cycle of ComputeMG_ref, but calling ComputeSYMGS/ComputeSPMV instead
+  of their _ref versions, so the HOV variants of those kernels run inside MG
+  (and CG). In ref builds they forward to the _ref versions, so results are
+  unchanged. No ROI markers here: ComputeMG marks the whole top-level call,
+  and the SYMGS/SPMV markers only exist in their own KERNEL_* binaries.
+*/
+static int ComputeMG_impl(const SparseMatrix & A, const Vector & r, Vector & x) {
+  assert(x.localLength==A.localNumberOfColumns); // Make sure x contain space for halo values
+
+  ZeroVector(x); // initialize x to zero
+
+  int ierr = 0;
+  if (A.mgData!=0) { // Go to next coarse level if defined
+    int numberOfPresmootherSteps = A.mgData->numberOfPresmootherSteps;
+    for (int i=0; i< numberOfPresmootherSteps; ++i) ierr += ComputeSYMGS(A, r, x);
+    if (ierr!=0) return ierr;
+    ierr = ComputeSPMV(A, x, *A.mgData->Axf); if (ierr!=0) return ierr;
+    // Perform restriction operation using simple injection
+    ierr = ComputeRestriction_ref(A, r);  if (ierr!=0) return ierr;
+    ierr = ComputeMG_impl(*A.Ac,*A.mgData->rc, *A.mgData->xc);  if (ierr!=0) return ierr;
+    ierr = ComputeProlongation_ref(A, x);  if (ierr!=0) return ierr;
+    int numberOfPostsmootherSteps = A.mgData->numberOfPostsmootherSteps;
+    for (int i=0; i< numberOfPostsmootherSteps; ++i) ierr += ComputeSYMGS(A, r, x);
+    if (ierr!=0) return ierr;
+  }
+  else {
+    ierr = ComputeSYMGS(A, r, x);
+    if (ierr!=0) return ierr;
+  }
+  return 0;
+}
 
 /*!
   @param[in] A the known system matrix
@@ -46,7 +83,7 @@ int ComputeMG(const SparseMatrix  & A, const Vector & r, Vector & x) {
 #endif
 
   A.isMgOptimized = false;
-  int ret = ComputeMG_ref(A, r, x);
+  int ret = ComputeMG_impl(A, r, x);
 
 #if defined(ANNOTATE) && defined(KERNEL_MG)
     roi_end_();
