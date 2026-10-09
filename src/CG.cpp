@@ -22,11 +22,7 @@
 
 #include <cmath>
 
-#ifdef ANNOTATE
-extern "C" {
-#include <annotate.h>
-}
-#endif
+#include "hpcg_roi.hpp"
 
 #include "hpcg.hpp"
 
@@ -103,14 +99,13 @@ int CG(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
 
   // Start iterations
   // Convergence check accepts an error of no more than 6 significant digits of tolerance
-#if defined(ANNOTATE) && defined(KERNEL_CG)
-    roi_begin_();
-#ifdef SYNC_ON_ROI
-    annotate_synchronize_(1);
-#endif
-#endif
-
   for (int k=1; k<=max_iter && normr/normr0 > tolerance * (1.0 + 1.0e-6); k++ ) {
+#if defined(ANNOTATE) && defined(KERNEL_CG)
+    // The ROI is one iteration of the armed CG call, not the whole call
+    // (optMaxIters iterations): k == 2, the first iteration with the
+    // steady-state sequence (MG, dot, WAXPBY, SpMV, dot, 2 WAXPBY, dot).
+    const bool roi = (k == 2) && HpcgRoiBegin();
+#endif
     TICK();
     if (doPreconditioning)
       ComputeMG(A, r, z); // Apply preconditioner
@@ -140,14 +135,10 @@ int CG(const SparseMatrix & A, CGData & data, const Vector & b, Vector & x,
       HPCG_fout << "Iteration = "<< k << "   Scaled Residual = "<< normr/normr0 << std::endl;
 #endif
     niters = k;
-  }
-
 #if defined(ANNOTATE) && defined(KERNEL_CG)
-    roi_end_();
-#ifdef SYNC_ON_ROI
-    annotate_synchronize_(2);
+    HpcgRoiEnd(roi);
 #endif
-#endif
+  }
 
   // Store times
   times[1] += t1; // dot-product time

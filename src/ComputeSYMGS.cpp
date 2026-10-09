@@ -21,11 +21,7 @@
 #include "ComputeSYMGS.hpp"
 #include "ComputeSYMGS_ref.hpp"
 
-#ifdef ANNOTATE
-extern "C" {
-#include <annotate.h>
-}
-#endif
+#include "hpcg_roi.hpp"
 
 #ifdef HOV
 #include "hov.h"
@@ -69,10 +65,9 @@ int ComputeSYMGS( const SparseMatrix & A, const Vector & r, Vector & x) {
 #endif
 
 #if defined(ANNOTATE) && defined(KERNEL_SYMGS)
-    roi_begin_();
-#ifdef SYNC_ON_ROI
-    annotate_synchronize_(1);
-#endif
+  // The first armed call is the finest level's presmoother in the first MG
+  // of the timed CG call.
+  const bool roi = HpcgRoiBegin();
 #endif
 
 #ifdef HOV
@@ -127,10 +122,7 @@ int ComputeSYMGS( const SparseMatrix & A, const Vector & r, Vector & x) {
 #endif
 
 #if defined(ANNOTATE) && defined(KERNEL_SYMGS)
-    roi_end_();
-#ifdef SYNC_ON_ROI
-    annotate_synchronize_(2);
-#endif
+  HpcgRoiEnd(roi);
 #endif
 
   return ret;

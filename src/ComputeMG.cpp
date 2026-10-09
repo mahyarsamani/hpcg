@@ -25,11 +25,7 @@
 #include "ComputeProlongation_ref.hpp"
 #include <cassert>
 
-#ifdef ANNOTATE
-extern "C" {
-#include <annotate.h>
-}
-#endif
+#include "hpcg_roi.hpp"
 
 /*!
   The V-cycle of ComputeMG_ref, but calling ComputeSYMGS/ComputeSPMV instead
@@ -76,20 +72,14 @@ static int ComputeMG_impl(const SparseMatrix & A, const Vector & r, Vector & x) 
 int ComputeMG(const SparseMatrix  & A, const Vector & r, Vector & x) {
 
 #if defined(ANNOTATE) && defined(KERNEL_MG)
-    roi_begin_();
-#ifdef SYNC_ON_ROI
-    annotate_synchronize_(1);
-#endif
+  const bool roi = HpcgRoiBegin();
 #endif
 
   A.isMgOptimized = false;
   int ret = ComputeMG_impl(A, r, x);
 
 #if defined(ANNOTATE) && defined(KERNEL_MG)
-    roi_end_();
-#ifdef SYNC_ON_ROI
-    annotate_synchronize_(2);
-#endif
+  HpcgRoiEnd(roi);
 #endif
 
   return ret;

@@ -21,11 +21,7 @@
 #include "ComputeSPMV.hpp"
 #include "ComputeSPMV_ref.hpp"
 
-#ifdef ANNOTATE
-extern "C" {
-#include <annotate.h>
-}
-#endif
+#include "hpcg_roi.hpp"
 
 #ifdef HOV
 #include "hov.h"
@@ -58,10 +54,7 @@ int ComputeSPMV( const SparseMatrix & A, Vector & x, Vector & y) {
 #endif
 
 #if defined(ANNOTATE) && defined(KERNEL_SPMVM)
-    roi_begin_();
-#ifdef SYNC_ON_ROI
-    annotate_synchronize_(1);
-#endif
+  const bool roi = HpcgRoiBegin();
 #endif
 
 #ifdef HOV
@@ -98,10 +91,7 @@ int ComputeSPMV( const SparseMatrix & A, Vector & x, Vector & y) {
 #endif
 
 #if defined(ANNOTATE) && defined(KERNEL_SPMVM)
-    roi_end_();
-#ifdef SYNC_ON_ROI
-    annotate_synchronize_(2);
-#endif
+  HpcgRoiEnd(roi);
 #endif
 
   return ret;

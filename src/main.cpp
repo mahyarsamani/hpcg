@@ -61,10 +61,11 @@ using std::endl;
 #include "TestSymmetry.hpp"
 #include "TestNorms.hpp"
 
+#include "hpcg_roi.hpp"
+
 #ifdef ANNOTATE
-extern "C" {
-#include "annotate.h"
-}
+// See hpcg_roi.hpp: set right before the first timed CG call.
+bool hpcg_roi_armed = false;
 #endif // ANNOTATE
 /*!
   Main driver program: Construct synthetic problem, run V&V tests, compute benchmark parameters, run benchmark, report results.
@@ -354,18 +355,10 @@ int main(int argc, char * argv[]) {
   for (int i=0; i< numberOfCgSets; ++i) {
     ZeroVector(x); // Zero out x
 #ifdef ANNOTATE
-    roi_begin_();
-#ifdef SYNC_ON_ROI
-    annotate_synchronize_(1);
-#endif // SYNC_ON_ROI
+    // The KERNEL_* kernel marks its next call as the ROI (hpcg_roi.hpp).
+    if (i == 0) hpcg_roi_armed = true;
 #endif // ANNOTATE
     ierr = CG( A, data, b, x, optMaxIters, optTolerance, niters, normr, normr0, &times[0], true);
-#ifdef ANNOTATE
-    roi_end_();
-#ifdef SYNC_ON_ROI
-    annotate_synchronize_(2);
-#endif // SYNC_ON_ROI
-#endif // ANNOTATE
     if (ierr) HPCG_fout << "Error in call to CG: " << ierr << ".\n" << endl;
     if (rank==0) HPCG_fout << "Call [" << i << "] Scaled Residual [" << normr/normr0 << "]" << endl;
     testnorms_data.values[i] = normr/normr0; // Record scaled residual from this run

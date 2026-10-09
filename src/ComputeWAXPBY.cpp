@@ -21,11 +21,7 @@
 #include "ComputeWAXPBY.hpp"
 #include "ComputeWAXPBY_ref.hpp"
 
-#ifdef ANNOTATE
-extern "C" {
-#include <annotate.h>
-}
-#endif
+#include "hpcg_roi.hpp"
 
 /*!
   Routine to compute the update of a vector with the sum of two
@@ -49,20 +45,14 @@ int ComputeWAXPBY(const local_int_t n, const double alpha, const Vector & x,
     const double beta, const Vector & y, Vector & w, bool & isOptimized) {
 
 #if defined(ANNOTATE) && defined(KERNEL_WAXPBY)
-    roi_begin_();
-#ifdef SYNC_ON_ROI
-    annotate_synchronize_(1);
-#endif
+  const bool roi = HpcgRoiBegin();
 #endif
 
   isOptimized = false;
   int ret = ComputeWAXPBY_ref(n, alpha, x, beta, y, w);
 
 #if defined(ANNOTATE) && defined(KERNEL_WAXPBY)
-    roi_end_();
-#ifdef SYNC_ON_ROI
-    annotate_synchronize_(2);
-#endif
+  HpcgRoiEnd(roi);
 #endif
 
   return ret;
